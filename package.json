@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc && npm link",
-    "start": "ts-node ./bin/run.ts"
+    "start": "ts-node ./bin/run.ts",
+    "test": "jest"
   },
   "bin": {
     "wt-mgr": "./dist/bin/run.js"
@@ -23,8 +24,11 @@
   },
   "homepage": "https://github.com/kev-daniell/git-worktree-mgr#readme",
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^26.1.0",
     "@types/yargs": "^17.0.35",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
   },

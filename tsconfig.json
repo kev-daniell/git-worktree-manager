@@ -4,8 +4,13 @@
     "outDir": "dist",
     "esModuleInterop": true,
     "module": "CommonJS",
-    "target": "ES6"
+    "target": "ES6",
+    "types": ["jest"],
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts", "bin/**/*.ts"]
+  "include": ["src/**/*.ts", "bin/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["dist", "node_modules"]
 }
 
