@@ -1,6 +1,5 @@
-import * as newCommand from './new'
-import * as listCommand from './list'
-import * as deleteCommand from './delete'
+// This file acts as a central hub for all command modules.
 
-export const commands = [newCommand, listCommand, deleteCommand];
-
+export * as newCmd from './new';
+export * as listCmd from './list';
+export * as deleteCmd from './delete';
