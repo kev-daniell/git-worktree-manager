@@ -1,57 +1,66 @@
 # wt-mgr
 
-A simple CLI tool to streamline the management of Git worktrees and associated tmux sessions.
-It automates the tedious process of creating a worktree, a new branch, and a new tmux session,
-allowing you to switch contexts with a single command.
+A simple CLI tool to manage Git worktrees and tmux sessions.
 
 ## Why?
 
-Git worktrees are a superior alternative to `git stash` for working on multiple branches simultaneously.
-However, the manual setup can be cumbersome: you have to create the worktree, create a new tmux window or
-session, and `cd` into the new directory. This tool handles all of that for you.
+While `git stash` is a useful command, it can become cumbersome when you need to switch between
+branches frequently. Git worktrees offer a more robust solution by allowing you to check out multiple
+branches at once, each in its own directory. This tool takes it a step further by automating the setup
+of worktrees and integrating them with tmux, so you can switch contexts with a single command.
 
 ## Installation
 
 ```bash
 # After cloning the repository, to install dependencies and link the binary:
-npm install && npm link
+npm run build
 ```
 
-## Basic Commands
+## Usage
 
-### Create a new worktree
+Once installed, you can use the `wt-mgr` command to manage your worktrees.
 
-Creates a new git worktree, a new branch with the same name, and a detached tmux session that opens in
-the new worktree's directory.
+### Examples
 
+**Create a new worktree based on the current branch:**
 ```bash
-wt-mgr new <worktree-name> [base-branch]
+wt-mgr new my-feature
 ```
 
-**Example:**
+**Create a new worktree based on a specific branch:**
 ```bash
-# Creates a worktree and branch named 'hotfix-123' from 'main'
 wt-mgr new hotfix-123 main
 ```
-You can then attach to the new session with `tmux attach -t hotfix-123`.
 
-### List managed worktrees
-
-Lists all worktrees currently managed by `wt-mgr`, showing their name, path, and tmux session status.
-
+**List all managed worktrees:**
 ```bash
 wt-mgr list
 ```
 
-### Delete a worktree
-
-Removes the specified worktree and kills its associated tmux session.
-
+**Delete a worktree and its associated tmux window and git branch:**
 ```bash
-wt-mgr delete <worktree-name>
+wt-mgr delete my-feature --tmux --branch
 ```
 
-**Example:**
-```bash
-wt-mgr delete hotfix-123
-```
+## Basic Commands
+
+| Command | Alias(es) | Description |
+| --- | --- | --- |
+| `new <name> [base-branch]` | `n` | Creates a new worktree, branch, and tmux session. |
+| `list` | `l` | Lists all managed worktrees. |
+| `delete <name>` | `d`, `rm` | Removes a managed worktree. Use `--tmux` to close the tmux window and `--branch` to delete the git branch. |
+
+
+## TODO
+
+- [ ] **Configuration**: Allow users to configure the base path for new worktrees.
+- [ ] **State Sync**: Add a command to sync the state file with the actual git worktrees on the system.
+- [ ] **Error Handling**: Improve error handling and provide more specific feedback.
+
+## Contributing
+
+Contributions are welcome! Please feel free to open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the ISC License.
