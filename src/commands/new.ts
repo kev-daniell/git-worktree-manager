@@ -45,23 +45,30 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
 
     // 4. Create a new tmux window or session
     const inTmux = !!process.env.TMUX;
-    let tmuxTarget = name; // Default to session name
+    let sessionName: string;
+    let windowId: number;
 
     if (inTmux) {
       // We are in a tmux session, create a new window and switch to it
-      await runCommand(`tmux new-window -c ${worktreePath} -n ${name}`);
-      // The user is automatically switched, no need to store the window ID for now
-      // For deletion, we can target by window name.
+      const newWindowIdStr = await runCommand(`tmux new-window -c ${worktreePath} -n ${name} -P -F '#{window_id}'`);
+      windowId = parseInt(newWindowIdStr.trim().substring(1), 10);
+      sessionName = await runCommand(`tmux display-message -p -F '#S'`);
     } else {
       // We are not in a tmux session, create a new detached session
-      await runCommand(`tmux new-session -d -s ${name} -c ${worktreePath}`);
+      sessionName = name;
+      await runCommand(`tmux new-session -d -s ${sessionName} -c ${worktreePath}`);
+      const newWindowIdStr = await runCommand(`tmux list-windows -t ${sessionName} -F '#{window_id}' | head -n 1`);
+      windowId = parseInt(newWindowIdStr.trim().substring(1), 10);
     }
 
     // 5. Save the new worktree's state
     addWorktree({
       name,
       path: worktreePath,
-      tmuxSession: name, // We'll target by name for both windows and sessions for now
+      tmux: {
+        session: sessionName,
+        windowId,
+      },
     });
 
     logger.success(`✅ Successfully created worktree '${name}'.`);

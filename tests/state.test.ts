@@ -35,7 +35,7 @@ describe('State Management', () => {
   });
 
   it('writeState should create a directory and write the state file', () => {
-    const worktrees: Worktree[] = [{ name: 'test-wt', path: '/path/to/test-wt', tmuxSession: 'test-wt' }];
+    const worktrees: Worktree[] = [{ name: 'test-wt', path: '/path/to/test-wt', tmux: { session: 'test-wt', windowId: 1 } }];
     writeState(worktrees);
     
     expect(fs.existsSync(STATE_FILE_PATH)).toBe(true);
@@ -44,7 +44,7 @@ describe('State Management', () => {
   });
 
   it('readState should correctly read a populated state file', () => {
-    const worktrees: Worktree[] = [{ name: 'test-read', path: '/path/to/test-read', tmuxSession: 'test-read' }];
+    const worktrees: Worktree[] = [{ name: 'test-read', path: '/path/to/test-read', tmux: { session: 'test-read', windowId: 1 } }];
     fs.writeFileSync(STATE_FILE_PATH, JSON.stringify(worktrees));
 
     const state = readState();
@@ -53,7 +53,7 @@ describe('State Management', () => {
 
   it('addWorktree should add a new worktree to the state', () => {
     writeState([]); // Start with a clean slate
-    const newWorktree: Worktree = { name: 'add-me', path: '/path/to/add-me', tmuxSession: 'add-me' };
+    const newWorktree: Worktree = { name: 'add-me', path: '/path/to/add-me', tmux: { session: 'add-me', windowId: 1 } };
     addWorktree(newWorktree);
 
     const state = readState();
@@ -63,8 +63,8 @@ describe('State Management', () => {
 
   it('removeWorktree should remove an existing worktree from the state', () => {
     const initialWorktrees: Worktree[] = [
-      { name: 'keep-me', path: '/path/to/keep-me', tmuxSession: 'keep-me' },
-      { name: 'remove-me', path: '/path/to/remove-me', tmuxSession: 'remove-me' },
+      { name: 'keep-me', path: '/path/to/keep-me', tmux: { session: 'keep-me', windowId: 1 } },
+      { name: 'remove-me', path: '/path/to/remove-me', tmux: { session: 'remove-me', windowId: 1 } },
     ];
     writeState(initialWorktrees);
 

@@ -24,7 +24,24 @@ export const handler: CommandModule<{}>['handler'] = async (argv) => {
       return;
     } else {
       logger.success('Managed  worktrees:')
-      console.table(worktrees)
+      const formattedWorktrees = worktrees.map(wt => {
+        if (wt.tmux) {
+          return {
+            name: wt.name,
+            path: wt.path,
+            tmux_session: wt.tmux.session,
+            tmux_window_id: wt.tmux.windowId,
+          };
+        }
+        // Backwards compatibility for old state format
+        return {
+          name: wt.name,
+          path: wt.path,
+          tmux_session: (wt as any).tmuxSession || 'N/A',
+          tmux_window_id: 'N/A',
+        };
+      });
+      console.table(formattedWorktrees)
     }
 
   } catch (error) {

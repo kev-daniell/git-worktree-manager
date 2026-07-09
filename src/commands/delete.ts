@@ -9,18 +9,33 @@ export const aliases = ['d', 'rm'];
 
 interface DeleteCommandArgs {
   name: string;
+  t?: boolean;
+  b?: boolean;
 }
 
 export const builder: CommandModule<{}, DeleteCommandArgs>['builder'] = (yargs) => {
-  return yargs.positional('name', {
-    describe: 'The name of the worktree to remove',
-    type: 'string',
-    demandOption: true,
-  });
+  return yargs
+    .positional('name', {
+      describe: 'The name of the worktree to remove',
+      type: 'string',
+      demandOption: true,
+    })
+    .option('t', {
+      alias: 'tmux',
+      describe: 'Also close the associated tmux window.',
+      type: 'boolean',
+      default: false,
+    })
+    .option('b', {
+      alias: 'branch',
+      describe: 'Also delete the associated git branch.',
+      type: 'boolean',
+      default: false,
+    });
 };
 
 export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (argv) => {
-  const { name } = argv;
+  const { name, t, b } = argv;
 
   try {
     logger.info(`Deleting worktree '${name}'...`);
@@ -35,16 +50,41 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
       return;
     }
 
-    // 2. Run the git worktree remove command
-    // Per the request, we do not use --force, leaving the branch.
+    // 2. Close the associated tmux window, if requested
+    if (t) {
+      if (worktreeToDelete.tmux) {
+        try {
+          const target = `${worktreeToDelete.tmux.session}:@${worktreeToDelete.tmux.windowId}`;
+          await runCommand(`tmux kill-window -t ${target}`);
+          logger.info(`   - Closed tmux window @${worktreeToDelete.tmux.windowId} in session '${worktreeToDelete.tmux.session}'.`);
+        } catch (error) {
+          logger.info(`   - Could not close tmux window. It may have been closed already.`);
+        }
+      } else {
+        logger.info(`   - No tmux information found for this worktree.`);
+      }
+    }
+
+    // 3. Run the git worktree remove command
     await runCommand(`git worktree remove ${worktreeToDelete.path}`);
 
-    // 3. Remove the worktree from our state
+    // 4. Delete the git branch, if requested
+    if (b) {
+      try {
+        await runCommand(`git branch -d ${name}`);
+        logger.info(`   - Deleted git branch '${name}'.`);
+      } catch (error) {
+        logger.error(`   - Failed to delete branch '${name}'. It might have unmerged changes.`);
+        logger.info(`   - To force delete, run: git branch -D ${name}`);
+      }
+    } else {
+      logger.info(`   - The branch '${name}' was not deleted.`);
+    }
+
+    // 5. Remove the worktree from our state
     removeWorktree(name);
 
     logger.success(`✅ Successfully removed worktree '${name}'.`);
-    logger.info(`   - The branch '${name}' was not deleted.`);
-    logger.info(`   - The tmux window/session was not affected.`);
 
   } catch (error) {
     logger.error(`❌ Failed to delete worktree '${name}'.`);
