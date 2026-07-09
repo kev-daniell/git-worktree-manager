@@ -20,6 +20,14 @@ npm run build
 
 Once installed, you can use the `wt-mgr` command to manage your worktrees.
 
+## Basic Commands
+
+| Command | Alias(es) | Description |
+| --- | --- | --- |
+| `new <name> [base-branch]` | `n` | Creates a new worktree, branch, and tmux session. |
+| `list` | `l` | Lists all managed worktrees. |
+| `delete <name>` | `d`, `rm` | Removes a managed worktree. Use `--tmux` to close the tmux window and `--branch` to delete the git branch. |
+
 ### Examples
 
 **Create a new worktree based on the current branch:**
@@ -41,21 +49,6 @@ wt-mgr list
 ```bash
 wt-mgr delete my-feature --tmux --branch
 ```
-
-## Basic Commands
-
-| Command | Alias(es) | Description |
-| --- | --- | --- |
-| `new <name> [base-branch]` | `n` | Creates a new worktree, branch, and tmux session. |
-| `list` | `l` | Lists all managed worktrees. |
-| `delete <name>` | `d`, `rm` | Removes a managed worktree. Use `--tmux` to close the tmux window and `--branch` to delete the git branch. |
-
-
-## TODO
-
-- [ ] **Configuration**: Allow users to configure the base path for new worktrees.
-- [ ] **State Sync**: Add a command to sync the state file with the actual git worktrees on the system.
-- [ ] **Error Handling**: Improve error handling and provide more specific feedback.
 
 ## Contributing
 
