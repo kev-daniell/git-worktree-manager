@@ -5,9 +5,9 @@
     "esModuleInterop": true,
     "module": "CommonJS",
     "target": "ES6",
-    "types": ["jest"],
     "types": [
-      "node"
+      "node",
+      "jest"
     ]
   },
   "include": ["src/**/*.ts", "bin/**/*.ts", "tests/**/*.ts"],

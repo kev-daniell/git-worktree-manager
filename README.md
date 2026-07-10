@@ -15,10 +15,24 @@ of worktrees and integrating them with tmux, so you can switch contexts with a s
 
 ## Installation
 
-```bash
-# After cloning the repository, to install dependencies and link the binary:
-npm run build
-```
+To set up `wtmg` on your machine:
+
+1. Install [Bun](https://bun.sh/) if you haven't already:
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
+
+2. Clone this repository and install dependencies:
+   ```bash
+   bun install
+   ```
+
+3. Make the runner executable and symlink it to a directory in your `$PATH` (e.g., `/usr/local/bin`
+or `/opt/homebrew/bin`):
+   ```bash
+   chmod +x bin/run.ts
+   ln -sf $(pwd)/bin/run.ts /usr/local/bin/wtmg
+   ```
 
 ## Usage
 
@@ -58,6 +72,19 @@ wtmg list
 ```bash
 wtmg delete my-feature --tmux --branch
 ```
+
+## Local Development
+
+Since this project runs natively using the Bun runtime, you do not need a compilation step. You can run and test your TypeScript source code directly.
+
+- **Running tests:**
+  ```bash
+  bun test
+  ```
+- **Executing directly:**
+  ```bash
+  bun bin/run.ts list
+  ```
 
 ## Contributing
 

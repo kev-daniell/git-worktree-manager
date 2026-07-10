@@ -1,18 +1,15 @@
-/// <reference types="jest" />
-
+import { describe, beforeEach, afterAll, it, expect, mock } from 'bun:test';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { Worktree } from '../src/types';
 
-jest.mock('../src/config', () => ({
-  __esModule: true,
-  ...jest.requireActual('../src/config'),
+mock.module('../src/config', () => ({
   STATE_FILE_PATH: path.join(os.tmpdir(), 'wtmg-jest-tests', 'state.json'),
 }));
 
 import { readState, writeState, addWorktree, removeWorktree } from '../src/state';
 import { STATE_FILE_PATH } from '../src/config';
+import { Worktree } from '../src/types';
 
 const MOCK_CONFIG_DIR = path.dirname(STATE_FILE_PATH);
 

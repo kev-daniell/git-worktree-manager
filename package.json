@@ -4,12 +4,10 @@
   "description": "A simple CLI tool to streamline the management of Git worktrees and associated tmux sessions.",
   "main": "index.js",
   "scripts": {
-    "build": "tsc && npm link",
-    "start": "ts-node ./bin/run.ts",
-    "test": "jest"
+    "test": "bun test"
   },
   "bin": {
-    "wtmg": "./dist/bin/run.js"
+    "wtmg": "./bin/run.ts"
   },
   "repository": {
     "type": "git",
