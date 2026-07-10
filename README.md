@@ -8,10 +8,14 @@ A simple CLI tool to manage Git worktrees and tmux sessions.
 
 ## Why?
 
-While `git stash` is a useful command, it can become cumbersome when you need to switch between
-branches frequently. Git worktrees offer a more robust solution by allowing you to check out multiple
-branches at once, each in its own directory. This tool takes it a step further by automating the setup
-of worktrees and integrating them with tmux, so you can switch contexts with a single command.
+As a developer, Git worktrees became a growing part of my daily workflow. As I used it more, it
+became repetitive to manually create a new tmux pane, navigate the new worktree directory, and close all
+tasks related to that worktree when I was done with the feature.
+
+I created `wtmg` to manage worktrees and the tmux windows I use to interact with other working trees. 
+
+This is a very personal tool and tailored to my workflow. Others may find it restricting, but if you have
+any ideas, then feel free to open an issue.
 
 ## Installation
 
