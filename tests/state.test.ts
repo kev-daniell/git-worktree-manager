@@ -5,21 +5,18 @@ import path from 'path';
 import os from 'os';
 import { Worktree } from '../src/types';
 
-// Mock the config module to point our state file to a temporary directory
 jest.mock('../src/config', () => ({
   __esModule: true,
   ...jest.requireActual('../src/config'),
-  STATE_FILE_PATH: path.join(os.tmpdir(), 'wt-mgr-jest-tests', 'state.json'),
+  STATE_FILE_PATH: path.join(os.tmpdir(), 'wtmg-jest-tests', 'state.json'),
 }));
 
-// Import the functions to test *after* the mock is defined
 import { readState, writeState, addWorktree, removeWorktree } from '../src/state';
 import { STATE_FILE_PATH } from '../src/config';
 
 const MOCK_CONFIG_DIR = path.dirname(STATE_FILE_PATH);
 
 describe('State Management', () => {
-  // Clean up the mock directory before and after tests
   beforeEach(() => {
     fs.rmSync(MOCK_CONFIG_DIR, { recursive: true, force: true });
     fs.mkdirSync(MOCK_CONFIG_DIR, { recursive: true });

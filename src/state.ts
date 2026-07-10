@@ -4,10 +4,6 @@ import { Worktree } from './types';
 import { STATE_FILE_PATH } from './config';
 import { logger } from './logger';
 
-/**
- * Reads the current state from the state file.
- * @returns An array of worktree objects.
- */
 export function readState(): Worktree[] {
   try {
     if (!fs.existsSync(STATE_FILE_PATH)) {
@@ -17,15 +13,10 @@ export function readState(): Worktree[] {
     return JSON.parse(content) as Worktree[];
   } catch (error) {
     logger.error(`Error reading state file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    // If the file is corrupted or unreadable, default to an empty state.
     return [];
   }
 }
 
-/**
- * Writes the given state to the state file.
- * @param worktrees - The array of worktree objects to save.
- */
 export function writeState(worktrees: Worktree[]): void {
   try {
     const configDir = path.dirname(STATE_FILE_PATH);
@@ -39,13 +30,8 @@ export function writeState(worktrees: Worktree[]): void {
   }
 }
 
-/**
- * Adds a new worktree to the state.
- * @param worktree - The worktree object to add.
- */
 export function addWorktree(worktree: Worktree): void {
   const currentState = readState();
-  // Avoid adding duplicates
   if (currentState.some(wt => wt.name === worktree.name)) {
     logger.error(`Worktree with name '${worktree.name}' already exists.`);
     return;
@@ -54,10 +40,6 @@ export function addWorktree(worktree: Worktree): void {
   writeState(newState);
 }
 
-/**
- * Removes a worktree from the state by its name.
- * @param name - The name of the worktree to remove.
- */
 export function removeWorktree(name: string): void {
   const currentState = readState();
   const newState = currentState.filter(wt => wt.name !== name);

@@ -1,4 +1,4 @@
-import type { CommandModule } from 'yargs';
+import { CommandModule } from 'yargs';
 import { readState, removeWorktree } from '../state';
 import { logger } from '../logger';
 import { runCommand } from '../shell';
@@ -46,7 +46,7 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
 
     if (!worktreeToDelete) {
       logger.error(`❌ Worktree '${name}' not found in managed state.`);
-      logger.info('Run `wt-mgr list` to see managed worktrees.');
+      logger.info('Run `wtmg list` to see managed worktrees.');
       return;
     }
 
@@ -89,6 +89,6 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
   } catch (error) {
     logger.error(`❌ Failed to delete worktree '${name}'.`);
     logger.error('This can happen if the worktree has unstaged changes.');
-    logger.error('You may need to resolve the git error and then run `wt-mgr state:sync` (feature to be implemented).');
+    logger.error('You may need to resolve the git error and then run `wtmg state:sync` (feature to be implemented).');
   }
 };

@@ -9,7 +9,7 @@
     "test": "jest"
   },
   "bin": {
-    "wt-mgr": "./dist/bin/run.js"
+    "wtmg": "./dist/bin/run.js"
   },
   "repository": {
     "type": "git",

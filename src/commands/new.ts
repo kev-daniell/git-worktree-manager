@@ -1,4 +1,4 @@
-import type { CommandModule } from 'yargs';
+import { CommandModule } from 'yargs';
 import path from 'path';
 import { addWorktree } from '../state';
 import { logger } from '../logger';
@@ -11,6 +11,7 @@ export const aliases = ['n'];
 interface NewCommandArgs {
   name: string;
   'base-branch'?: string;
+  t?: boolean;
 }
 
 export const builder: CommandModule<{}, NewCommandArgs>['builder'] = (yargs) => {
@@ -23,11 +24,17 @@ export const builder: CommandModule<{}, NewCommandArgs>['builder'] = (yargs) => 
     .positional('base-branch', {
       describe: 'The git branch to base the new worktree on',
       type: 'string',
+    })
+    .option('t', {
+      alias: 'tmux',
+      describe: 'Create an associated tmux window or session.',
+      type: 'boolean',
+      default: false,
     });
 };
 
 export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv) => {
-  const { name, 'base-branch': baseBranch } = argv;
+  const { name, 'base-branch': baseBranch, t } = argv;
 
   try {
     logger.info(`Creating new worktree '${name}'...`);
@@ -43,40 +50,49 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
     const branch = baseBranch || (await runCommand('git rev-parse --abbrev-ref HEAD'));
     await runCommand(`git worktree add -b ${name} ${worktreePath} ${branch}`);
 
-    // 4. Create a new tmux window or session
-    const inTmux = !!process.env.TMUX;
-    let sessionName: string;
-    let windowId: number;
+    // 4. Create a new tmux window or session if requested
+    let tmuxConfig: { session: string; windowId: number } | undefined;
 
-    if (inTmux) {
-      // We are in a tmux session, create a new window and switch to it
-      const newWindowIdStr = await runCommand(`tmux new-window -c ${worktreePath} -n ${name} -P -F '#{window_id}'`);
-      windowId = parseInt(newWindowIdStr.trim().substring(1), 10);
-      sessionName = await runCommand(`tmux display-message -p -F '#S'`);
-    } else {
-      // We are not in a tmux session, create a new detached session
-      sessionName = name;
-      await runCommand(`tmux new-session -d -s ${sessionName} -c ${worktreePath}`);
-      const newWindowIdStr = await runCommand(`tmux list-windows -t ${sessionName} -F '#{window_id}' | head -n 1`);
-      windowId = parseInt(newWindowIdStr.trim().substring(1), 10);
+    if (t) {
+      const inTmux = !!process.env.TMUX;
+      let sessionName: string;
+      let windowId: number;
+
+      if (inTmux) {
+        // We are in a tmux session, create a new window and switch to it
+        const newWindowIdStr = await runCommand(`tmux new-window -c ${worktreePath} -n ${name} -P -F '#{window_id}'`);
+        windowId = parseInt(newWindowIdStr.trim().substring(1), 10);
+        sessionName = await runCommand(`tmux display-message -p -F '#S'`);
+      } else {
+        // We are not in a tmux session, create a new detached session
+        sessionName = name;
+        await runCommand(`tmux new-session -d -s ${sessionName} -c ${worktreePath}`);
+        const newWindowIdStr = await runCommand(`tmux list-windows -t ${sessionName} -F '#{window_id}' | head -n 1`);
+        windowId = parseInt(newWindowIdStr.trim().substring(1), 10);
+      }
+
+      tmuxConfig = {
+        session: sessionName,
+        windowId,
+      };
     }
 
     // 5. Save the new worktree's state
     addWorktree({
       name,
       path: worktreePath,
-      tmux: {
-        session: sessionName,
-        windowId,
-      },
+      ...(tmuxConfig ? { tmux: tmuxConfig } : {}),
     });
 
     logger.success(`✅ Successfully created worktree '${name}'.`);
     logger.log(`   - Path: ${worktreePath}`);
-    if (inTmux) {
-      logger.log(`   - Switched to new window '[${name}]' in current session.`);
-    } else {
-      logger.log(`   - To attach, run: tmux attach -t ${name}`);
+    if (t) {
+      const inTmux = !!process.env.TMUX;
+      if (inTmux) {
+        logger.log(`   - Switched to new window '[${name}]' in current session.`);
+      } else {
+        logger.log(`   - To attach, run: tmux attach -t ${name}`);
+      }
     }
 
   } catch (error) {

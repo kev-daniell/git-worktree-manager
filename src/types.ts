@@ -1,7 +1,7 @@
 export interface Worktree {
   name: string;
   path: string;
-  tmux: {
+  tmux?: {
     session: string;
     windowId: number;
   };

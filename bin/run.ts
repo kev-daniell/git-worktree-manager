@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { bgBlue, bold } from 'picocolors';
-import * as commands from '../src/commands';
+import { bgBlue } from 'picocolors';
+import * as newCmd from '../src/commands/new';
+import * as listCmd from '../src/commands/list';
+import * as deleteCmd from '../src/commands/delete';
 
 const yargsInstance = yargs(hideBin(process.argv));
 
 yargsInstance
-  .scriptName('wt-mgr')
+  .scriptName('wtmg')
   .usage(bgBlue('Welcome to git-worktree-mgr'))
-  .command(commands.newCmd)
-  .command(commands.listCmd)
-  .command(commands.deleteCmd)
+  .command(newCmd)
+  .command(listCmd)
+  .command(deleteCmd)
   .demandCommand(1, 'You need at least one command before moving on')
   .strict()
   .help()
