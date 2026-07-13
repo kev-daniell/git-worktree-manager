@@ -32,9 +32,6 @@ export const handler: CommandModule<{}>['handler'] = async (argv) => {
           } else {
             workspace_details = JSON.stringify(wt.workspace.metadata);
           }
-        } else if (wt.tmux) {
-          // Fallback if legacy tmux field is somehow present
-          workspace_details = `Session: ${wt.tmux.session}, Window: @${wt.tmux.windowId}`;
         }
 
         return {
