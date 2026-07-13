@@ -14,8 +14,8 @@ tasks related to that worktree when I was done with the feature.
 
 So, I created `wtmg` to manage worktrees and the tmux windows I use to interact with other working trees. 
 
-While `wtmg` currently only ships with a `tmux` provider, its architecture is fully pluggable.
-Contributions for other workspace managers, multiplexers or IDEs are very welcome!
+`wtmg` has a plugin architecture that can work with virtually any workspace. Contributions for other
+workspace managers, multiplexers or IDEs are welcome!
 
 ## Installation
 
