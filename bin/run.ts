@@ -5,6 +5,7 @@ import { bgBlue } from 'picocolors';
 import * as newCmd from '../src/commands/new';
 import * as listCmd from '../src/commands/list';
 import * as deleteCmd from '../src/commands/delete';
+import * as setWorkspaceCmd from '../src/commands/setWorkspace';
 
 const yargsInstance = yargs(hideBin(process.argv));
 
@@ -14,6 +15,7 @@ yargsInstance
   .command(newCmd)
   .command(listCmd)
   .command(deleteCmd)
+  .command(setWorkspaceCmd)
   .demandCommand(1, 'You need at least one command before moving on')
   .strict()
   .help()

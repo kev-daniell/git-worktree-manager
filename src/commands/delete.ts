@@ -2,6 +2,7 @@ import { CommandModule } from 'yargs';
 import { readState, removeWorktree } from '../state';
 import { logger } from '../logger';
 import { runCommand } from '../shell';
+import { getProviderByName } from '../plugins';
 
 export const command = 'delete <name>';
 export const describe = 'Remove a managed git worktree.';
@@ -9,7 +10,7 @@ export const aliases = ['d', 'rm'];
 
 interface DeleteCommandArgs {
   name: string;
-  t?: boolean;
+  w?: boolean;
   b?: boolean;
 }
 
@@ -20,9 +21,9 @@ export const builder: CommandModule<{}, DeleteCommandArgs>['builder'] = (yargs) 
       type: 'string',
       demandOption: true,
     })
-    .option('t', {
-      alias: 'tmux',
-      describe: 'Also close the associated tmux window.',
+    .option('w', {
+      alias: 'workspace',
+      describe: 'Also close the associated workspace window/session.',
       type: 'boolean',
       default: false,
     })
@@ -35,7 +36,7 @@ export const builder: CommandModule<{}, DeleteCommandArgs>['builder'] = (yargs) 
 };
 
 export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (argv) => {
-  const { name, t, b } = argv;
+  const { name, w, b } = argv;
 
   try {
     logger.info(`Deleting worktree '${name}'...`);
@@ -50,18 +51,13 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
       return;
     }
 
-    // 2. Close the associated tmux window, if requested
-    if (t) {
-      if (worktreeToDelete.tmux) {
-        try {
-          const target = `${worktreeToDelete.tmux.session}:@${worktreeToDelete.tmux.windowId}`;
-          await runCommand(`tmux kill-window -t ${target}`);
-          logger.info(`   - Closed tmux window @${worktreeToDelete.tmux.windowId} in session '${worktreeToDelete.tmux.session}'.`);
-        } catch (error) {
-          logger.info(`   - Could not close tmux window. It may have been closed already.`);
-        }
+    // 2. Close the associated workspace window, if requested
+    if (w) {
+      if (worktreeToDelete.workspace) {
+        const provider = getProviderByName(worktreeToDelete.workspace.provider);
+        await provider.onDelete(name, worktreeToDelete.path, worktreeToDelete.workspace.metadata);
       } else {
-        logger.info(`   - No tmux information found for this worktree.`);
+        logger.info(`   - No workspace information found for this worktree.`);
       }
     }
 
