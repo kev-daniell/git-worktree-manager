@@ -12,10 +12,10 @@ As a developer, Git worktrees became a growing part of my daily workflow. As I u
 became repetitive to manually create a new tmux pane, navigate the new worktree directory, and close all
 tasks related to that worktree when I was done with the feature.
 
-I created `wtmg` to manage worktrees and the tmux windows I use to interact with other working trees. 
+So, I created `wtmg` to manage worktrees and the tmux windows I use to interact with other working trees. 
 
-This is currently `wtmg` only has a tmux plugin. I encourage others to contribute their own workspaces
-if they think this tool could be useful.
+While `wtmg` currently only ships with a `tmux` provider, its architecture is fully pluggable.
+Contributions for other workspace managers, multiplexers or IDEs are very welcome!
 
 ## Installation
 

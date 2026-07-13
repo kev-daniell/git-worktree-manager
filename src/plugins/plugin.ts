@@ -1,6 +1,6 @@
 export interface WorkspaceProvider {
   /**
-   * The name of the provider (e.g., 'tmux', 'none', 'zellij').
+   * The name of the provider (e.g., 'tmux', 'none').
    */
   name: string;
 
