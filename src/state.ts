@@ -10,7 +10,19 @@ export function readState(): Worktree[] {
       return [];
     }
     const content = fs.readFileSync(STATE_FILE_PATH, 'utf-8');
-    return JSON.parse(content) as Worktree[];
+    const worktrees = JSON.parse(content) as Worktree[];
+    
+    // Runtime migration for legacy tmux entries
+    return worktrees.map(wt => {
+      if (wt.tmux && !wt.workspace) {
+        wt.workspace = {
+          provider: 'tmux',
+          metadata: wt.tmux
+        };
+        delete wt.tmux;
+      }
+      return wt;
+    });
   } catch (error) {
     logger.error(`Error reading state file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return [];

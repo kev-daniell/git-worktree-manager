@@ -3,21 +3,22 @@ import path from 'path';
 import { addWorktree } from '../state';
 import { logger } from '../logger';
 import { runCommand } from '../shell';
+import { getActiveProvider } from '../plugins';
 
 export const command = 'new <name> [base-branch]';
-export const describe = 'Create a new worktree, branch, and tmux session.';
+export const describe = 'Create a new worktree, branch, and workspace session.';
 export const aliases = ['n'];
 
 interface NewCommandArgs {
   name: string;
   'base-branch'?: string;
-  t?: boolean;
+  w?: boolean;
 }
 
 export const builder: CommandModule<{}, NewCommandArgs>['builder'] = (yargs) => {
   return yargs
     .positional('name', {
-      describe: 'The name for the worktree, new branch, and tmux session',
+      describe: 'The name for the worktree, new branch, and workspace session',
       type: 'string',
       demandOption: true,
     })
@@ -25,16 +26,16 @@ export const builder: CommandModule<{}, NewCommandArgs>['builder'] = (yargs) => 
       describe: 'The git branch to base the new worktree on',
       type: 'string',
     })
-    .option('t', {
-      alias: 'tmux',
-      describe: 'Create an associated tmux window or session.',
+    .option('w', {
+      alias: 'workspace',
+      describe: 'Create an associated workspace session or window.',
       type: 'boolean',
       default: false,
     });
 };
 
 export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv) => {
-  const { name, 'base-branch': baseBranch, t } = argv;
+  const { name, 'base-branch': baseBranch, w } = argv;
 
   try {
     logger.info(`Creating new worktree '${name}'...`);
@@ -50,30 +51,15 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
     const branch = baseBranch || (await runCommand('git rev-parse --abbrev-ref HEAD'));
     await runCommand(`git worktree add -b ${name} ${worktreePath} ${branch}`);
 
-    // 4. Create a new tmux window or session if requested
-    let tmuxConfig: { session: string; windowId: number } | undefined;
+    // 4. Set up the workspace session if requested
+    let workspaceState: { provider: string; metadata: any } | undefined;
 
-    if (t) {
-      const inTmux = !!process.env.TMUX;
-      let sessionName: string;
-      let windowId: number;
-
-      if (inTmux) {
-        // We are in a tmux session, create a new window and switch to it
-        const newWindowIdStr = await runCommand(`tmux new-window -c ${worktreePath} -n ${name} -P -F '#{window_id}'`);
-        windowId = parseInt(newWindowIdStr.trim().substring(1), 10);
-        sessionName = await runCommand(`tmux display-message -p -F '#S'`);
-      } else {
-        // We are not in a tmux session, create a new detached session
-        sessionName = name;
-        await runCommand(`tmux new-session -d -s ${sessionName} -c ${worktreePath}`);
-        const newWindowIdStr = await runCommand(`tmux list-windows -t ${sessionName} -F '#{window_id}' | head -n 1`);
-        windowId = parseInt(newWindowIdStr.trim().substring(1), 10);
-      }
-
-      tmuxConfig = {
-        session: sessionName,
-        windowId,
+    if (w) {
+      const provider = getActiveProvider();
+      const metadata = await provider.onCreate(name, worktreePath);
+      workspaceState = {
+        provider: provider.name,
+        metadata
       };
     }
 
@@ -81,19 +67,11 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
     addWorktree({
       name,
       path: worktreePath,
-      ...(tmuxConfig ? { tmux: tmuxConfig } : {}),
+      ...(workspaceState ? { workspace: workspaceState } : {}),
     });
 
     logger.success(`✅ Successfully created worktree '${name}'.`);
     logger.log(`   - Path: ${worktreePath}`);
-    if (t) {
-      const inTmux = !!process.env.TMUX;
-      if (inTmux) {
-        logger.log(`   - Switched to new window '[${name}]' in current session.`);
-      } else {
-        logger.log(`   - To attach, run: tmux attach -t ${name}`);
-      }
-    }
 
   } catch (error) {
     logger.error(`❌ Failed to create worktree '${name}'. Please check the output above for details.`);

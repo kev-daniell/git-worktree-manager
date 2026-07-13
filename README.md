@@ -14,8 +14,8 @@ tasks related to that worktree when I was done with the feature.
 
 I created `wtmg` to manage worktrees and the tmux windows I use to interact with other working trees. 
 
-This is a very personal tool and tailored to my workflow. Others may find it restricting, but if you have
-any ideas, then feel free to open an issue.
+This is currently `wtmg` only has a tmux plugin. I encourage others to contribute their own workspaces
+if they think this tool could be useful.
 
 ## Installation
 
@@ -46,9 +46,10 @@ Once installed, you can use the `wtmg` command to manage your worktrees.
 
 | Command | Alias(es) | Description |
 | --- | --- | --- |
-| `new <name> [base-branch]` | `n` | Creates a new worktree and branch. Use `--tmux` or `-t` to also create a tmux session/window. |
+| `new <name> [base-branch]` | `n` | Creates a new worktree and branch. Use `--workspace` or `-w` to also create a workspace session/window. |
 | `list` | `l` | Lists all managed worktrees. |
-| `delete <name>` | `d`, `rm` | Removes a managed worktree. Use `--tmux` or `-t` to close the tmux window and `--branch` or `-b` to delete the git branch. |
+| `delete <name>` | `d`, `rm` | Removes a managed worktree. Use `--workspace` to close the workspace window and `--branch` to delete the git branch. |
+| `set-workspace <provider>` | `sw` | Sets the default workspace provider (e.g. `tmux`, `none`). |
 
 ### Examples
 
@@ -59,7 +60,7 @@ wtmg new my-feature
 
 **Create a new worktree and open it in a new tmux window/session:**
 ```bash
-wtmg new my-feature --tmux
+wtmg new my-feature --workspace
 ```
 
 **Create a new worktree based on a specific branch:**
@@ -74,7 +75,7 @@ wtmg list
 
 **Delete a worktree and its associated tmux window and git branch:**
 ```bash
-wtmg delete my-feature --tmux --branch
+wtmg delete my-feature --workspace --branch
 ```
 
 ## Local Development

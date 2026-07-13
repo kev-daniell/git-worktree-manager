@@ -1,6 +1,7 @@
 import { CommandModule } from "yargs";
 import { logger } from "../logger";
 import { readState } from "../state";
+import { getProviderByName } from "../plugins";
 
 export const command = 'list';
 export const describe = '';
@@ -23,20 +24,23 @@ export const handler: CommandModule<{}>['handler'] = async (argv) => {
     } else {
       logger.success('Managed  worktrees:')
       const formattedWorktrees = worktrees.map(wt => {
-        if (wt.tmux) {
-          return {
-            name: wt.name,
-            path: wt.path,
-            tmux_session: wt.tmux.session,
-            tmux_window_id: wt.tmux.windowId,
-          };
+        let workspace_details = 'N/A';
+        if (wt.workspace) {
+          const provider = getProviderByName(wt.workspace.provider);
+          if (provider.getDisplayDetails) {
+            workspace_details = provider.getDisplayDetails(wt.workspace.metadata);
+          } else {
+            workspace_details = JSON.stringify(wt.workspace.metadata);
+          }
+        } else if (wt.tmux) {
+          // Fallback if legacy tmux field is somehow present
+          workspace_details = `Session: ${wt.tmux.session}, Window: @${wt.tmux.windowId}`;
         }
-        // Backwards compatibility for old state format
+
         return {
           name: wt.name,
           path: wt.path,
-          tmux_session: (wt as any).tmuxSession || 'N/A',
-          tmux_window_id: 'N/A',
+          workspace: workspace_details,
         };
       });
       console.table(formattedWorktrees)
