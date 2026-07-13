@@ -14,7 +14,7 @@ export const builder: CommandModule<{}, SetWorkspaceArgs>['builder'] = (yargs) =
   return yargs.positional('provider', {
     describe: 'The workspace provider to use',
     type: 'string',
-    choices: ['tmux', 'none'],
+    choices: ['tmux', 'none', 'vscode'],
     demandOption: true,
   });
 };

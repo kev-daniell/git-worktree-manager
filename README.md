@@ -51,6 +51,18 @@ Once installed, you can use the `wtmg` command to manage your worktrees.
 | `delete <name>` | `d`, `rm` | Removes a managed worktree. Use `--workspace` to close the workspace window and `--branch` to delete the git branch. |
 | `set-workspace <provider>` | `sw` | Sets the default workspace provider (e.g. `tmux`, `none`). |
 
+## Workspace Integrations
+
+Inside `wtmg`, a **workspace** refers to the development environment associated with your worktree.
+The tool supports the following workspace integrations:
+
+- **`tmux`**: Integrates with the Tmux terminal multiplexer. If run inside a Tmux session,
+it spawns a new window; if run outside, it starts a detached session.
+- **`vscode`** : Opens the newly created worktree directory in a fresh VS Code window using the `code` CLI.
+- **`none`**: Only manages the Git worktree, without launching any terminal multiplexer or IDE window.
+
+You can set your preferred workspace provider globally using `wtmg set-workspace <provider>`.
+
 ### Examples
 
 **Create a new worktree based on the current branch (without tmux):**

@@ -1,6 +1,7 @@
 import { WorkspaceProvider } from './plugin';
 import { TmuxProvider } from './tmux';
 import { NoneProvider } from './none';
+import { VSCodeProvider } from './vscode';
 import { readSettings } from '../config';
 
 export function getActiveProvider(): WorkspaceProvider {
@@ -13,6 +14,8 @@ export function getProviderByName(name: string): WorkspaceProvider {
   switch (name.toLowerCase()) {
     case 'tmux':
       return new TmuxProvider();
+    case 'vscode':
+      return new VSCodeProvider();
     case 'none':
       return new NoneProvider();
     default:
