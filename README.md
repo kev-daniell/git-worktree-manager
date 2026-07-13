@@ -48,7 +48,7 @@ Once installed, you can use the `wtmg` command to manage your worktrees.
 | --- | --- | --- |
 | `new <name> [base-branch]` | `n` | Creates a new worktree and branch. Use `--tmux` or `-t` to also create a tmux session/window. |
 | `list` | `l` | Lists all managed worktrees. |
-| `delete <name>` | `d`, `rm` | Removes a managed worktree. Use `--tmux` to close the tmux window and `--branch` to delete the git branch. |
+| `delete <name>` | `d`, `rm` | Removes a managed worktree. Use `--tmux` or `-t` to close the tmux window and `--branch` or `-b` to delete the git branch. |
 
 ### Examples
 
