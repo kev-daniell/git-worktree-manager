@@ -3,5 +3,11 @@
   "extends": [
     "config:recommended"
   ],
-  "labels": ["dependencies", "renovate"]
+  "labels": ["dependencies", "renovate"],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    }
+  ]
 }
