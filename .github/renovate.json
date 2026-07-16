@@ -3,11 +3,35 @@
   "extends": [
     "config:recommended"
   ],
-  "labels": ["dependencies", "renovate"],
+  "dependencyDashboard": true,
+  "dependencyDashboardApproval": false,
+  "platformAutomerge": true,
+  "labels": [
+    "dependencies"
+  ],
+  "assignees": [
+    "kev-daniell"
+  ],
+  "prCreation": "immediate",
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "matchCurrentVersion": "!/^0/",
       "automerge": true
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false
     }
+  ],
+  "schedule": [
+    "before 5am on monday" 
   ]
 }
