@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kev-daniell/git-worktree-mgr.git"
+    "url": "git+https://github.com/kev-daniell/git-worktree-manager.git"
   },
   "keywords": [
     "git",
@@ -23,9 +23,9 @@
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/kev-daniell/git-worktree-mgr/issues"
+    "url": "https://github.com/kev-daniell/git-worktree-manager/issues"
   },
-  "homepage": "https://github.com/kev-daniell/git-worktree-mgr#readme",
+  "homepage": "https://github.com/kev-daniell/git-worktree-manager#readme",
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^26.1.0",
