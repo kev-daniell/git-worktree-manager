@@ -1,0 +1,14 @@
+{
+  "branches": ["main"],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    ["@semantic-release/github", {
+      "assets": [
+        {"path": "wtmg-linux-x64", "label": "Linux Binary (x64)"},
+        {"path": "wtmg-darwin-x64", "label": "macOS Binary (Intel)"},
+        {"path": "wtmg-darwin-arm64", "label": "macOS Binary (Apple Silicon)"}
+      ]
+    }]
+  ]
+}

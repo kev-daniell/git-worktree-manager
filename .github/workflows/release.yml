@@ -2,8 +2,8 @@ name: Release Binary
 
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches:
+      - main
 
 jobs:
   build-and-release:
@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write
+      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -30,12 +32,7 @@ jobs:
           bun build ./bin/run.ts --compile --target=bun-darwin-x64 --outfile wtmg-darwin-x64
           bun build ./bin/run.ts --compile --target=bun-darwin-arm64 --outfile wtmg-darwin-arm64
 
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            wtmg-linux-x64
-            wtmg-darwin-x64
-            wtmg-darwin-arm64
+      - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
