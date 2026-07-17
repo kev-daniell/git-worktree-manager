@@ -19,7 +19,51 @@ workspace managers, multiplexers or IDEs are welcome!
 
 ## Installation
 
-To set up `wtmg` on your machine:
+### Method 1: Via npm or Bun (Easiest)
+
+You can install the package globally using npm or bun:
+
+```bash
+# Using npm
+npm install -g git-worktree-manager
+
+# Using bun
+bun add -g git-worktree-manager
+```
+
+---
+
+### Method 2: Standalone Binary
+
+You can download a pre-compiled, self-contained binary for your platform from the [Releases](https://github.com/kev-daniell/git-worktree-manager/releases) page. You do not need to install Bun or Node.js to use this.
+
+1. Download the correct binary for your system:
+   - **Linux x64:** `wtmg-linux-x64`
+   - **macOS Intel:** `wtmg-darwin-x64`
+   - **macOS Apple Silicon:** `wtmg-darwin-arm64`
+
+2. Make the binary executable:
+   ```bash
+   chmod +x wtmg-darwin-arm64  # Replace with your downloaded binary name
+   ```
+
+3. Move the binary into your `$PATH` (e.g., `/usr/local/bin`) and rename it to `wtmg`:
+   ```bash
+   mv wtmg-darwin-arm64 /usr/local/bin/wtmg
+   ```
+
+> [!IMPORTANT]
+> **macOS "Damaged/Cannot be opened" Gatekeeper Workaround:**
+> Since these binaries are not codesigned with an Apple Developer ID, macOS Gatekeeper may flag the downloaded binary as "damaged". If you get this error, you can strip the quarantine attribute by running:
+> ```bash
+> xattr -d com.apple.quarantine /usr/local/bin/wtmg
+> ```
+
+---
+
+### Method 3: From Source (Using Bun)
+
+If you prefer to run or modify the source code directly:
 
 1. Install [Bun](https://bun.sh/) if you haven't already:
    ```bash
@@ -28,11 +72,12 @@ To set up `wtmg` on your machine:
 
 2. Clone this repository and install dependencies:
    ```bash
+   git clone https://github.com/kev-daniell/git-worktree-manager.git
+   cd git-worktree-manager
    bun install
    ```
 
-3. Make the runner executable and symlink it to a directory in your `$PATH` (e.g., `/usr/local/bin`
-or `/opt/homebrew/bin`):
+3. Make the runner executable and symlink it to a directory in your `$PATH`:
    ```bash
    chmod +x bin/run.ts
    ln -sf $(pwd)/bin/run.ts /usr/local/bin/wtmg
