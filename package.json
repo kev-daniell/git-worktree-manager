@@ -2,12 +2,17 @@
   "name": "git-worktree-mgr",
   "version": "1.0.0",
   "description": "A simple CLI tool to streamline the management of Git worktrees and associated tmux sessions.",
-  "main": "index.js",
+  "main": "dist/bin/run.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "bun test"
+    "test": "bun test",
+    "build": "tsc",
+    "prepublishOnly": "bun run build"
   },
   "bin": {
-    "wtmg": "./bin/run.ts"
+    "wtmg": "./dist/bin/run.js"
   },
   "repository": {
     "type": "git",
