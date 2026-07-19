@@ -77,7 +77,7 @@ If you prefer to run or modify the source code directly:
    bun install
    ```
 
-3. Make the runner executable and symlink it to a directory in your `$PATH`:
+3. Make the runner executable and symlink it to a directory in your `$PATH` (e.g., `/usr/local/bin`):
    ```bash
    chmod +x bin/run.ts
    ln -sf $(pwd)/bin/run.ts /usr/local/bin/wtmg
