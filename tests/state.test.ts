@@ -29,7 +29,8 @@ describe('State Management', () => {
   });
 
   it('writeState should create a directory and write the state file', () => {
-    const worktrees: Worktree[] = [{ name: 'test-wt', path: '/path/to/test-wt', workspace: { provider: 'tmux', metadata: { session: 'test-wt', windowId: 1 } } }];
+    const testPath = path.join(MOCK_CONFIG_DIR, 'test-wt');
+    const worktrees: Worktree[] = [{ name: 'test-wt', path: testPath, workspace: { provider: 'none', metadata: { session: 'test-wt', windowId: 1 } } }];
     writeState(worktrees);
     
     expect(fs.existsSync(STATE_FILE_PATH)).toBe(true);
@@ -38,7 +39,9 @@ describe('State Management', () => {
   });
 
   it('readState should correctly read a populated state file', () => {
-    const worktrees: Worktree[] = [{ name: 'test-read', path: '/path/to/test-read', workspace: { provider: 'tmux', metadata: { session: 'test-read', windowId: 1 } } }];
+    const testPath = path.join(MOCK_CONFIG_DIR, 'test-read');
+    fs.mkdirSync(testPath, { recursive: true });
+    const worktrees: Worktree[] = [{ name: 'test-read', path: testPath, workspace: { provider: 'none', metadata: { session: 'test-read', windowId: 1 } } }];
     fs.writeFileSync(STATE_FILE_PATH, JSON.stringify(worktrees));
 
     const state = readState();
@@ -47,7 +50,9 @@ describe('State Management', () => {
 
   it('addWorktree should add a new worktree to the state', () => {
     writeState([]); // Start with a clean slate
-    const newWorktree: Worktree = { name: 'add-me', path: '/path/to/add-me', workspace: { provider: 'tmux', metadata: { session: 'add-me', windowId: 1 } } };
+    const testPath = path.join(MOCK_CONFIG_DIR, 'add-me');
+    fs.mkdirSync(testPath, { recursive: true });
+    const newWorktree: Worktree = { name: 'add-me', path: testPath, workspace: { provider: 'none', metadata: { session: 'add-me', windowId: 1 } } };
     addWorktree(newWorktree);
 
     const state = readState();
@@ -56,9 +61,13 @@ describe('State Management', () => {
   });
 
   it('removeWorktree should remove an existing worktree from the state', () => {
+    const keepPath = path.join(MOCK_CONFIG_DIR, 'keep-me');
+    const removePath = path.join(MOCK_CONFIG_DIR, 'remove-me');
+    fs.mkdirSync(keepPath, { recursive: true });
+    fs.mkdirSync(removePath, { recursive: true });
     const initialWorktrees: Worktree[] = [
-      { name: 'keep-me', path: '/path/to/keep-me', workspace: { provider: 'tmux', metadata: { session: 'keep-me', windowId: 1 } } },
-      { name: 'remove-me', path: '/path/to/remove-me', workspace: { provider: 'tmux', metadata: { session: 'remove-me', windowId: 1 } } },
+      { name: 'keep-me', path: keepPath, workspace: { provider: 'none', metadata: { session: 'keep-me', windowId: 1 } } },
+      { name: 'remove-me', path: removePath, workspace: { provider: 'none', metadata: { session: 'remove-me', windowId: 1 } } },
     ];
     writeState(initialWorktrees);
 
@@ -73,5 +82,35 @@ describe('State Management', () => {
     fs.writeFileSync(STATE_FILE_PATH, 'this is not json');
     const state = readState();
     expect(state).toEqual([]);
+  });
+
+  it('readState should prune worktrees whose directory does not exist', () => {
+    const validPath = path.join(MOCK_CONFIG_DIR, 'valid-dir');
+    const invalidPath = path.join(MOCK_CONFIG_DIR, 'non-existent-dir');
+    fs.mkdirSync(validPath, { recursive: true });
+    
+    const worktrees: Worktree[] = [
+      { name: 'valid', path: validPath, workspace: { provider: 'none', metadata: {} } },
+      { name: 'invalid', path: invalidPath, workspace: { provider: 'none', metadata: {} } }
+    ];
+    fs.writeFileSync(STATE_FILE_PATH, JSON.stringify(worktrees));
+
+    const state = readState();
+    expect(state).toHaveLength(1);
+    expect(state[0].name).toBe('valid');
+  });
+
+  it('readState should clear stale workspaces if the provider reports it as invalid', () => {
+    const testPath = path.join(MOCK_CONFIG_DIR, 'test-stale');
+    fs.mkdirSync(testPath, { recursive: true });
+    
+    const worktrees: Worktree[] = [
+      { name: 'test-stale', path: testPath, workspace: { provider: 'tmux', metadata: { session: 'stale-session', windowId: 999 } } }
+    ];
+    fs.writeFileSync(STATE_FILE_PATH, JSON.stringify(worktrees));
+
+    const state = readState();
+    expect(state).toHaveLength(1);
+    expect(state[0].workspace).toBeUndefined();
   });
 });

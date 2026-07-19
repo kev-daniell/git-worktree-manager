@@ -31,4 +31,12 @@ export interface WorkspaceProvider {
    * @returns A string representing the details, or undefined if not supported.
    */
   getDisplayDetails?(metadata: any): string;
+
+  /**
+   * Optional hook to check if the workspace session/pane is still active.
+   * 
+   * @param metadata The persisted metadata.
+   * @returns true if still active, false otherwise.
+   */
+  isValidSession?(metadata: any): boolean;
 }
