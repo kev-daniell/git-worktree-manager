@@ -1,5 +1,5 @@
 {
-  "name": "git-worktree-mgr",
+  "name": "git-worktree-manager",
   "version": "1.0.1",
   "description": "A simple CLI tool to streamline the management of Git worktrees and associated tmux sessions.",
   "main": "dist/bin/run.js",
@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "test": "bun test",
-    "build": "tsc",
+    "build": "tsc && bun run scripts/postbuild.ts",
     "prepublishOnly": "bun run build"
   },
   "bin": {
