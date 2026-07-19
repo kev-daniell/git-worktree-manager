@@ -1,6 +1,7 @@
 import { WorkspaceProvider } from './plugin';
 import { runCommand } from '../shell';
 import { logger } from '../logger';
+import { execSync } from 'child_process';
 
 export class TmuxProvider implements WorkspaceProvider {
   name = 'tmux';
@@ -51,5 +52,19 @@ export class TmuxProvider implements WorkspaceProvider {
       return `Session: ${metadata.session}, Window: @${metadata.windowId}`;
     }
     return 'N/A';
+  }
+
+  isValidSession(metadata: any): boolean {
+    if (!metadata || !metadata.session || metadata.windowId === undefined) {
+      return false;
+    }
+    try {
+      const output = execSync(`tmux list-windows -t ${metadata.session} -F '#{window_id}'`, {
+        stdio: ['pipe', 'pipe', 'ignore']
+      }).toString();
+      return output.includes(`@${metadata.windowId}`);
+    } catch {
+      return false;
+    }
   }
 }
