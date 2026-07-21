@@ -25,10 +25,10 @@ You can install the package globally using npm or bun:
 
 ```bash
 # Using npm
-npm install -g git-worktree-manager
+npm install -g @kev-daniell/git-worktree-manager
 
 # Using bun
-bun add -g git-worktree-manager
+bun add -g @kev-daniell/git-worktree-manager
 ```
 
 ---
