@@ -2,7 +2,8 @@
   "name": "@kev-daniell/git-worktree-manager",
   "version": "1.0.4",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "description": "A simple CLI tool to streamline the management of Git worktrees and associated tmux sessions.",
   "main": "dist/bin/run.js",
