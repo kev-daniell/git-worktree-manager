@@ -33,6 +33,11 @@ jobs:
           bun build ./bin/run.ts --compile --minify --target=bun-darwin-x64 --outfile wtmg-darwin-x64
           bun build ./bin/run.ts --compile --minify --target=bun-darwin-arm64 --outfile wtmg-darwin-arm64
 
+      - name: Setup Node.js for Semantic Release
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
       - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
