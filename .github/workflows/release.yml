@@ -34,7 +34,7 @@ jobs:
           bun build ./bin/run.ts --compile --minify --target=bun-darwin-arm64 --outfile wtmg-darwin-arm64
 
       - name: Setup Node.js for Semantic Release
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22.x'
 
