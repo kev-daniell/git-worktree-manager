@@ -44,7 +44,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
     "semantic-release": "^25.0.0",
-    "@semantic-release/git": "^10.0.1"
+    "@semantic-release/git": "^11.0.0"
   },
   "dependencies": {
     "picocolors": "^1.1.1",
