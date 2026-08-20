@@ -3,6 +3,7 @@ import { readState, removeWorktree } from '../state';
 import { logger } from '../logger';
 import { runCommand } from '../shell';
 import { getProviderByName } from '../plugins';
+import { runHooksForEvent, HookContext } from '../hooks';
 
 export const command = 'delete <name>';
 export const describe = 'Remove a managed git worktree.';
@@ -12,6 +13,7 @@ interface DeleteCommandArgs {
   name: string;
   w?: boolean;
   b?: boolean;
+  'skip-hooks'?: boolean;
 }
 
 export const builder: CommandModule<{}, DeleteCommandArgs>['builder'] = (yargs) => {
@@ -32,11 +34,16 @@ export const builder: CommandModule<{}, DeleteCommandArgs>['builder'] = (yargs) 
       describe: 'Also delete the associated git branch.',
       type: 'boolean',
       default: false,
+    })
+    .option('skip-hooks', {
+      describe: 'Skip execution of pre-delete and post-delete hooks.',
+      type: 'boolean',
+      default: false,
     });
 };
 
 export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (argv) => {
-  const { name, w, b } = argv;
+  const { name, w, b, 'skip-hooks': skipHooks } = argv;
 
   try {
     logger.info(`Deleting worktree '${name}'...`);
@@ -49,6 +56,19 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
       logger.error(`❌ Worktree '${name}' not found in managed state.`);
       logger.info('Run `wtmg list` to see managed worktrees.');
       return;
+    }
+
+    const gitRoot = await runCommand('git rev-parse --show-toplevel');
+    const hookContext: HookContext = {
+      eventName: 'pre-delete',
+      worktreeName: name,
+      worktreePath: worktreeToDelete.path,
+      projectRoot: gitRoot,
+      workspaceProvider: worktreeToDelete.workspace?.provider || 'none',
+    };
+
+    if (!skipHooks) {
+      await runHooksForEvent(hookContext);
     }
 
     // 2. Close the associated workspace window, if requested
@@ -81,6 +101,11 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
     removeWorktree(name);
 
     logger.success(`✅ Successfully removed worktree '${name}'.`);
+
+    if (!skipHooks) {
+      hookContext.eventName = 'post-delete';
+      await runHooksForEvent(hookContext);
+    }
 
   } catch (error) {
     logger.error(`❌ Failed to delete worktree '${name}'.`);

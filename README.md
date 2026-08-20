@@ -135,6 +135,52 @@ wtmg list
 wtmg delete my-feature --workspace --branch
 ```
 
+## Hooks
+
+`wtmg` includes a powerful hooks system that lets you automatically run setup or teardown scripts around worktree operations.
+
+Hooks can be executable shell scripts or inline commands, and can be defined at either a project or global level.
+
+| Event | Execution Timing | Failure Behavior | Common Use Cases |
+| --- | --- | --- | --- |
+| `pre-create` | Before worktree creation | Aborts creation | Environment validation |
+| `post-create` | After worktree & workspace creation | Logs warning | Running `npm install`, copying `.env`, `tmux` layout setup |
+| `pre-delete` | Before worktree deletion | Aborts deletion | Stopping dev servers, Docker containers |
+| `post-delete` | After worktree deletion | Logs warning | Cache cleanup |
+
+### Defining Hooks
+
+**1. Project-level Executable Scripts**
+Place executable scripts in `<project-root>/.wtmg/hooks/<event-name>` (e.g., `.wtmg/hooks/post-create`).
+
+**2. Global User-level Executable Scripts**
+Place executable scripts in `~/.config/wtmg/hooks/<event-name>`.
+
+**3. Inline Commands in Configuration**
+Add a `"hooks"` object to `~/.config/wtmg/config.json` or `<project-root>/.wtmgrc.json`:
+```json
+{
+  "provider": "tmux",
+  "hooks": {
+    "post-create": "cd \"$WTMG_WORKTREE_PATH\" && bun install"
+  }
+}
+```
+
+### Environment Variables
+
+When a hook executes, `wtmg` injects the following context as environment variables:
+- `WTMG_HOOK_EVENT`: The name of the event (e.g., `post-create`)
+- `WTMG_WORKTREE_NAME`: The name of the worktree branch (e.g., `feature-login`)
+- `WTMG_WORKTREE_PATH`: Absolute path to the new worktree directory
+- `WTMG_PROJECT_ROOT`: Absolute path to the main git repository
+- `WTMG_BASE_BRANCH`: The branch the worktree was based on
+- `WTMG_WORKSPACE_PROVIDER`: The workspace provider used (e.g., `tmux`)
+
+### Skipping Hooks
+
+You can bypass hook execution by passing the `--skip-hooks` flag to `wtmg new` or `wtmg delete`.
+
 ## Local Development
 
 Since this project runs natively using the Bun runtime, you do not need a compilation step. You can run and test your TypeScript source code directly.

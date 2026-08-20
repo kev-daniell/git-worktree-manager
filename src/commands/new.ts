@@ -4,6 +4,7 @@ import { addWorktree } from '../state';
 import { logger } from '../logger';
 import { runCommand } from '../shell';
 import { getActiveProvider } from '../plugins';
+import { runHooksForEvent, HookContext } from '../hooks';
 
 export const command = 'new <name> [base-branch]';
 export const describe = 'Create a new worktree, branch, and workspace session.';
@@ -13,6 +14,7 @@ interface NewCommandArgs {
   name: string;
   'base-branch'?: string;
   w?: boolean;
+  'skip-hooks'?: boolean;
 }
 
 export const builder: CommandModule<{}, NewCommandArgs>['builder'] = (yargs) => {
@@ -31,11 +33,16 @@ export const builder: CommandModule<{}, NewCommandArgs>['builder'] = (yargs) => 
       describe: 'Create an associated workspace session or window.',
       type: 'boolean',
       default: false,
+    })
+    .option('skip-hooks', {
+      describe: 'Skip execution of pre-create and post-create hooks.',
+      type: 'boolean',
+      default: false,
     });
 };
 
 export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv) => {
-  const { name, 'base-branch': baseBranch, w } = argv;
+  const { name, 'base-branch': baseBranch, w, 'skip-hooks': skipHooks } = argv;
 
   try {
     logger.info(`Creating new worktree '${name}'...`);
@@ -49,6 +56,20 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
 
     // 3. Create the new branch and worktree
     const branch = baseBranch || (await runCommand('git rev-parse --abbrev-ref HEAD'));
+
+    const hookContext: HookContext = {
+      eventName: 'pre-create',
+      worktreeName: name,
+      worktreePath,
+      projectRoot: gitRoot,
+      baseBranch: branch,
+      workspaceProvider: w ? getActiveProvider().name : 'none',
+    };
+
+    if (!skipHooks) {
+      await runHooksForEvent(hookContext);
+    }
+
     await runCommand(`git worktree add -b ${name} ${worktreePath} ${branch}`);
 
     // 4. Set up the workspace session if requested
@@ -72,6 +93,11 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
 
     logger.success(`✅ Successfully created worktree '${name}'.`);
     logger.log(`   - Path: ${worktreePath}`);
+
+    if (!skipHooks) {
+      hookContext.eventName = 'post-create';
+      await runHooksForEvent(hookContext);
+    }
 
   } catch (error) {
     logger.error(`❌ Failed to create worktree '${name}'. Please check the output above for details.`);
