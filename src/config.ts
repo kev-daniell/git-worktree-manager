@@ -22,6 +22,7 @@ export const SETTINGS_FILE_PATH = path.join(CONFIG_DIR, 'config.json');
 
 export interface AppSettings {
   provider: string;
+  hooks?: Record<string, string>;
 }
 
 import fs from 'fs';
