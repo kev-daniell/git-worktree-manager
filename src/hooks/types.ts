@@ -1,7 +1,6 @@
 export type HookEvent = 'pre-create' | 'post-create' | 'pre-delete' | 'post-delete';
 
 export interface HookContext {
-  eventName: HookEvent;
   worktreeName: string;
   worktreePath: string;
   projectRoot: string;

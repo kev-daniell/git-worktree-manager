@@ -60,7 +60,6 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
 
     const gitRoot = await runCommand('git rev-parse --show-toplevel');
     const hookContext: HookContext = {
-      eventName: 'pre-delete',
       worktreeName: name,
       worktreePath: worktreeToDelete.path,
       projectRoot: gitRoot,
@@ -68,7 +67,7 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
     };
 
     if (!skipHooks) {
-      await runHooksForEvent(hookContext);
+      await runHooksForEvent('pre-delete', hookContext);
     }
 
     // 2. Close the associated workspace window, if requested
@@ -103,8 +102,7 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
     logger.success(`✅ Successfully removed worktree '${name}'.`);
 
     if (!skipHooks) {
-      hookContext.eventName = 'post-delete';
-      await runHooksForEvent(hookContext);
+      await runHooksForEvent('post-delete', hookContext);
     }
 
   } catch (error) {

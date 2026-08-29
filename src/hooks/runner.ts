@@ -1,15 +1,15 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { HookContext, HookConfig } from './types';
+import { HookContext, HookConfig, HookEvent } from './types';
 import { discoverHooks } from './discovery';
 import { logger } from '../logger';
 
 const execAsync = promisify(exec);
 
-export async function runHook(config: HookConfig, context: HookContext): Promise<void> {
+export async function runHook(config: HookConfig, eventName: HookEvent, context: HookContext): Promise<void> {
   const env: NodeJS.ProcessEnv = {
     ...process.env,
-    WTMG_HOOK_EVENT: context.eventName,
+    WTMG_HOOK_EVENT: eventName,
     WTMG_WORKTREE_NAME: context.worktreeName,
     WTMG_WORKTREE_PATH: context.worktreePath,
     WTMG_PROJECT_ROOT: context.projectRoot,
@@ -27,7 +27,7 @@ export async function runHook(config: HookConfig, context: HookContext): Promise
     return;
   }
 
-  logger.info(`Running ${config.source} ${context.eventName} hook...`);
+  logger.info(`Running ${config.source} ${eventName} hook...`);
   
   try {
     const { stdout, stderr } = await execAsync(commandToRun, { 
@@ -48,12 +48,12 @@ export async function runHook(config: HookConfig, context: HookContext): Promise
     if (error.stderr && error.stderr.trim().length > 0) {
       logger.error(error.stderr.trim().split('\n').map((line: string) => `  [hook] ${line}`).join('\n'));
     }
-    throw new Error(`Hook execution failed for ${context.eventName} (${config.source})`);
+    throw new Error(`Hook execution failed for ${eventName} (${config.source})`);
   }
 }
 
-export async function runHooksForEvent(context: HookContext): Promise<void> {
-  const hooks = discoverHooks(context.eventName, context.projectRoot);
+export async function runHooksForEvent(eventName: HookEvent, context: HookContext): Promise<void> {
+  const hooks = discoverHooks(eventName, context.projectRoot);
   
   if (hooks.length === 0) {
     return;
@@ -61,9 +61,9 @@ export async function runHooksForEvent(context: HookContext): Promise<void> {
 
   for (const hook of hooks) {
     try {
-      await runHook(hook, context);
+      await runHook(hook, eventName, context);
     } catch (error: any) {
-      if (context.eventName.startsWith('pre-')) {
+      if (eventName.startsWith('pre-')) {
         // pre- hooks abort the operation
         logger.error(`❌ ${error.message}`);
         throw error;

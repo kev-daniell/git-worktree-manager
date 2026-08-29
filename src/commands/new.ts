@@ -58,7 +58,6 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
     const branch = baseBranch || (await runCommand('git rev-parse --abbrev-ref HEAD'));
 
     const hookContext: HookContext = {
-      eventName: 'pre-create',
       worktreeName: name,
       worktreePath,
       projectRoot: gitRoot,
@@ -67,7 +66,7 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
     };
 
     if (!skipHooks) {
-      await runHooksForEvent(hookContext);
+      await runHooksForEvent('pre-create', hookContext);
     }
 
     await runCommand(`git worktree add -b ${name} ${worktreePath} ${branch}`);
@@ -95,8 +94,7 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
     logger.log(`   - Path: ${worktreePath}`);
 
     if (!skipHooks) {
-      hookContext.eventName = 'post-create';
-      await runHooksForEvent(hookContext);
+      await runHooksForEvent('post-create', hookContext);
     }
 
   } catch (error) {

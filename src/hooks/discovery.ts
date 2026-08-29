@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import { HookEvent, HookConfig } from './types';
 import { readSettings, APP_NAME } from '../config';
+import { logger } from '../logger';
 
 const GLOBAL_CONFIG_DIR = path.join(os.homedir(), '.config', APP_NAME);
 
@@ -50,8 +51,8 @@ export function discoverHooks(event: HookEvent, projectRoot: string): HookConfig
           source: 'project'
         });
       }
-    } catch (e) {
-      // Ignore parse errors for project config
+    } catch (e: any) {
+      logger.error(`⚠️ Failed to parse project config at ${projectConfigPath}: ${e.message}`);
     }
   }
 
