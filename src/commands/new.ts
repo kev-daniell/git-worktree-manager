@@ -52,7 +52,7 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
     const projectDirName = path.basename(gitRoot);
 
     // 2. Define a path for the new worktree adjacent to the project directory
-    const worktreePath = path.resolve(gitRoot, '..', `${projectDirName}-${name}`);
+    const worktreePath = path.resolve(gitRoot, '..', `${name}-${projectDirName}`);
 
     // 3. Create the new branch and worktree
     const branch = baseBranch || (await runCommand('git rev-parse --abbrev-ref HEAD'));
