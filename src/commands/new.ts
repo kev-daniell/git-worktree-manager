@@ -1,10 +1,11 @@
 import { CommandModule } from 'yargs';
 import path from 'path';
-import { addWorktree } from '../state';
+import { addWorktree, removeWorktree } from '../state';
 import { logger } from '../logger';
 import { runCommand } from '../shell';
 import { getActiveProvider } from '../plugins';
 import { runHooksForEvent, HookContext } from '../hooks';
+import { RollbackStack } from '../rollback';
 
 export const command = 'new <name> [base-branch]';
 export const describe = 'Create a new worktree, branch, and workspace session.';
@@ -43,6 +44,7 @@ export const builder: CommandModule<{}, NewCommandArgs>['builder'] = (yargs) => 
 
 export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv) => {
   const { name, 'base-branch': baseBranch, w, 'skip-hooks': skipHooks } = argv;
+  const rollbackStack = new RollbackStack();
 
   try {
     logger.info(`Creating new worktree '${name}'...`);
@@ -70,6 +72,14 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
     }
 
     await runCommand(`git worktree add -b ${name} ${worktreePath} ${branch}`);
+    rollbackStack.add('Git worktree and branch', async () => {
+      await runCommand(`git worktree remove --force ${worktreePath}`);
+      try {
+        await runCommand(`git branch -D ${name}`);
+      } catch (e) {
+        // Ignore if branch doesn't exist or can't be deleted
+      }
+    });
 
     // 4. Set up the workspace session if requested
     let workspaceState: { provider: string; metadata: any } | undefined;
@@ -77,6 +87,7 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
     if (w) {
       const provider = getActiveProvider();
       const metadata = await provider.onCreate(name, worktreePath);
+      rollbackStack.add('Workspace session', () => provider.onDelete(name, worktreePath, metadata));
       workspaceState = {
         provider: provider.name,
         metadata
@@ -89,6 +100,8 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
       path: worktreePath,
       ...(workspaceState ? { workspace: workspaceState } : {}),
     });
+    rollbackStack.add('Tool state', () => { removeWorktree(name); });
+
 
     logger.success(`✅ Successfully created worktree '${name}'.`);
     logger.log(`   - Path: ${worktreePath}`);
@@ -97,7 +110,10 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
       await runHooksForEvent('post-create', hookContext);
     }
 
+    rollbackStack.cleanup();
   } catch (error) {
-    logger.error(`❌ Failed to create worktree '${name}'. Please check the output above for details.`);
+    logger.error(`❌ Failed to create worktree '${name}'. Initiating rollback...`);
+    await rollbackStack.rollback();
+    rollbackStack.cleanup();
   }
 };

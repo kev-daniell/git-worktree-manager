@@ -1,9 +1,10 @@
 import { CommandModule } from 'yargs';
-import { readState, removeWorktree } from '../state';
+import { readState, removeWorktree, addWorktree } from '../state';
 import { logger } from '../logger';
 import { runCommand } from '../shell';
 import { getProviderByName } from '../plugins';
 import { runHooksForEvent, HookContext } from '../hooks';
+import { RollbackStack } from '../rollback';
 
 export const command = 'delete <name>';
 export const describe = 'Remove a managed git worktree.';
@@ -44,6 +45,7 @@ export const builder: CommandModule<{}, DeleteCommandArgs>['builder'] = (yargs) 
 
 export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (argv) => {
   const { name, w, b, 'skip-hooks': skipHooks } = argv;
+  const rollbackStack = new RollbackStack();
 
   try {
     logger.info(`Deleting worktree '${name}'...`);
@@ -82,6 +84,7 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
 
     // 3. Run the git worktree remove command
     await runCommand(`git worktree remove ${worktreeToDelete.path}`);
+    rollbackStack.add('Restore git worktree', () => runCommand(`git worktree add ${worktreeToDelete.path} ${name}`));
 
     // 4. Delete the git branch, if requested
     if (b) {
@@ -98,6 +101,7 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
 
     // 5. Remove the worktree from our state
     removeWorktree(name);
+    rollbackStack.add('Restore tool state', () => { addWorktree(worktreeToDelete); });
 
     logger.success(`✅ Successfully removed worktree '${name}'.`);
 
@@ -105,9 +109,11 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
       await runHooksForEvent('post-delete', hookContext);
     }
 
+    rollbackStack.cleanup();
   } catch (error) {
-    logger.error(`❌ Failed to delete worktree '${name}'.`);
-    logger.error('This can happen if the worktree has unstaged changes.');
-    logger.error('You may need to resolve the git error and then run `wtmg state:sync` (feature to be implemented).');
+    logger.error(`❌ Failed to delete worktree '${name}'. Initiating rollback...`);
+    logger.error('This can happen if the worktree has unstaged changes or branch deletion failed.');
+    await rollbackStack.rollback();
+    rollbackStack.cleanup();
   }
 };
