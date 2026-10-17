@@ -15,6 +15,7 @@ interface NewCommandArgs {
   name: string;
   'base-branch'?: string;
   w?: boolean;
+  m?: boolean;
   'skip-hooks'?: boolean;
 }
 
@@ -35,6 +36,12 @@ export const builder: CommandModule<{}, NewCommandArgs>['builder'] = (yargs) => 
       type: 'boolean',
       default: false,
     })
+    .option('m', {
+      alias: 'move',
+      describe: 'Move uncommitted changes (including untracked files) into the new worktree.',
+      type: 'boolean',
+      default: false,
+    })
     .option('skip-hooks', {
       describe: 'Skip execution of pre-create and post-create hooks.',
       type: 'boolean',
@@ -43,7 +50,7 @@ export const builder: CommandModule<{}, NewCommandArgs>['builder'] = (yargs) => 
 };
 
 export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv) => {
-  const { name, 'base-branch': baseBranch, w, 'skip-hooks': skipHooks } = argv;
+  const { name, 'base-branch': baseBranch, w, m, 'skip-hooks': skipHooks } = argv;
   const rollbackStack = new RollbackStack();
 
   try {
@@ -69,6 +76,18 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
 
     if (!skipHooks) {
       await runHooksForEvent('pre-create', hookContext);
+    }
+
+    // Stash changes so they can be re-applied inside the new worktree
+    let stashed = false;
+    if (m) {
+      if (await runCommand('git status --porcelain')) {
+        await runCommand(`git stash push --include-untracked -m "wtmg new ${name}"`);
+        rollbackStack.add('Stashed changes', async () => { await runCommand('git stash pop --index'); });
+        stashed = true;
+      } else {
+        logger.info('No uncommitted changes to move.');
+      }
     }
 
     await runCommand(`git worktree add -b ${name} ${worktreePath} ${branch}`);
@@ -108,6 +127,12 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
 
     if (!skipHooks) {
       await runHooksForEvent('post-create', hookContext);
+    }
+
+    // 6. Re-apply stashed changes last, so a rollback never discards them (stashes are shared across worktrees)
+    if (stashed) {
+      await runCommand('git stash pop --index', { cwd: worktreePath });
+      logger.success(`✅ Moved uncommitted changes to worktree '${name}'.`);
     }
 
     rollbackStack.cleanup();
