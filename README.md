@@ -91,7 +91,7 @@ Once installed, you can use the `wtmg` command to manage your worktrees.
 
 | Command | Alias(es) | Description |
 | --- | --- | --- |
-| `new <name> [base-branch]` | `n` | Creates a new worktree and branch. Use `--workspace` or `-w` to also create a workspace session/window. |
+| `new <name> [base-branch]` | `n` | Creates a new worktree and branch. Use `--workspace` or `-w` to also create a workspace session/window, and `--move` or `-m` to carry over uncommitted changes. |
 | `list` | `l` | Lists all managed worktrees. |
 | `delete <name>` | `d`, `rm` | Removes a managed worktree. Use `--workspace` or `-w` to close the workspace window and `--branch` or `-b` to delete the git branch. |
 | `set-workspace <provider>` | `sw` | Sets the default workspace provider (e.g. `tmux`, `none`). |
@@ -123,6 +123,11 @@ wtmg new my-feature --workspace
 **Create a new worktree based on a specific branch:**
 ```bash
 wtmg new hotfix-123 main
+```
+
+**Create a new worktree and move your uncommitted changes into it:**
+```bash
+wtmg new my-feature --move
 ```
 
 **List all managed worktrees:**
