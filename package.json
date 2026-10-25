@@ -47,6 +47,7 @@
     "@semantic-release/git": "^11.0.0"
   },
   "dependencies": {
+    "clipboardy": "^5.3.2",
     "picocolors": "^1.1.1",
     "yargs": "^18.0.0"
   }
