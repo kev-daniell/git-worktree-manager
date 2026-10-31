@@ -84,7 +84,7 @@ export const handler: CommandModule<{}, DeleteCommandArgs>['handler'] = async (a
 
     // 3. Run the git worktree remove command
     await runCommand(`git worktree remove ${worktreeToDelete.path}`);
-    rollbackStack.add('Restore git worktree', () => runCommand(`git worktree add ${worktreeToDelete.path} ${name}`));
+    rollbackStack.add('Restore git worktree', async () => { await runCommand(`git worktree add ${worktreeToDelete.path} ${name}`); });
 
     // 4. Delete the git branch, if requested
     if (b) {
