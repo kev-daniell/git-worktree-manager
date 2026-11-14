@@ -2,14 +2,30 @@ import { CommandModule } from "yargs";
 import { logger } from "../logger";
 import { readState } from "../state";
 import { getProviderByName } from "../plugins";
+import { Worktree } from "../types";
 
 export const command = 'list';
-export const describe = '';
+export const describe = 'List all managed git worktrees';
 export const aliases = ['l'];
 
+interface ListCommandArgs {
+  long?: boolean;
+}
 
 
-export const handler: CommandModule<{}>['handler'] = async (argv) => {
+export const builder: CommandModule<{}, ListCommandArgs>['builder'] = (yargs) => {
+  return yargs
+    .option('long', {
+      alias: 'l',
+      describe: 'List worktrees in detailed table format',
+      type: 'boolean',
+      default: false,
+    })
+}
+
+export const handler: CommandModule<{}, ListCommandArgs>['handler'] = async (argv) => {
+  const { long: verbose } = argv;
+
   try {
     logger.info('Listing worktrees...\n');
 
@@ -22,25 +38,10 @@ export const handler: CommandModule<{}>['handler'] = async (argv) => {
       logger.info("Try `wtmg new <my-feature>` to create one.")
       return;
     } else {
-      logger.success('Managed  worktrees:')
-      const formattedWorktrees = worktrees.map(wt => {
-        let workspace_details = 'N/A';
-        if (wt.workspace) {
-          const provider = getProviderByName(wt.workspace.provider);
-          if (provider.getDisplayDetails) {
-            workspace_details = provider.getDisplayDetails(wt.workspace.metadata);
-          } else {
-            workspace_details = JSON.stringify(wt.workspace.metadata);
-          }
-        }
+      logger.success(`Managed worktrees (${worktrees.length})`);
 
-        return {
-          name: wt.name,
-          path: wt.path,
-          workspace: workspace_details,
-        };
-      });
-      console.table(formattedWorktrees)
+      if (verbose) printWorktreesVerbose(worktrees)
+      else printWorktreesConcise(worktrees) 
     }
 
   } catch (error) {
@@ -49,3 +50,29 @@ export const handler: CommandModule<{}>['handler'] = async (argv) => {
   }
 };
 
+
+function printWorktreesConcise(wts: Worktree[]): void {
+  logger.log(wts.map(wt => `  • ${wt.name}`).join('\n'))
+}
+
+function printWorktreesVerbose(worktrees: Worktree[]): void {
+  const formattedWorktrees = worktrees.map(wt => {
+    let workspace_details = 'N/A';
+    if (wt.workspace) {
+      const provider = getProviderByName(wt.workspace.provider);
+      if (provider.getDisplayDetails) {
+        workspace_details = provider.getDisplayDetails(wt.workspace.metadata);
+      } else {
+        workspace_details = JSON.stringify(wt.workspace.metadata);
+      }
+    }
+
+    return {
+      name: wt.name,
+      path: wt.path,
+      workspace: workspace_details,
+    };
+  });
+
+console.table(formattedWorktrees)
+}
