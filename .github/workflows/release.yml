@@ -36,7 +36,7 @@ jobs:
       - name: Setup Node.js for Semantic Release
         uses: actions/setup-node@v7
         with:
-          node-version: '24.x'
+          node-version: '26.x'
 
       - name: Semantic Release
         env:
