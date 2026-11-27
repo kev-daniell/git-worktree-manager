@@ -52,7 +52,14 @@ export const handler: CommandModule<{}, ListCommandArgs>['handler'] = async (arg
 
 
 function printWorktreesConcise(wts: Worktree[]): void {
-  logger.log(wts.map(wt => `  • ${wt.name}`).join('\n'))
+  const cwd = process.cwd();
+
+  const formatWorktree = (wt: Worktree): String => {
+    if(wt.path == cwd) return `  * ${wt.name}`; 
+    return `    ${wt.name}`; 
+  }
+
+  logger.log(wts.map(wt => formatWorktree(wt)).join('\n'))
 }
 
 function printWorktreesVerbose(worktrees: Worktree[]): void {
