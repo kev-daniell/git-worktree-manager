@@ -6,6 +6,7 @@ import { runCommand } from '../shell';
 import { getActiveProvider } from '../plugins';
 import { runHooksForEvent, HookContext } from '../hooks';
 import { RollbackStack } from '../rollback';
+import { resolveOriginalRepo } from '../git';
 
 export const command = 'new <name> [base-branch]';
 export const describe = 'Create a new worktree, branch, and workspace session.';
@@ -58,6 +59,7 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
 
     // 1. Get the root directory of the current git repository
     const gitRoot = await runCommand('git rev-parse --show-toplevel');
+    const originalRepo = (await resolveOriginalRepo(gitRoot)) ?? gitRoot;
     const projectDirName = path.basename(gitRoot);
 
     // 2. Define a path for the new worktree adjacent to the project directory
@@ -117,6 +119,7 @@ export const handler: CommandModule<{}, NewCommandArgs>['handler'] = async (argv
     addWorktree({
       name,
       path: worktreePath,
+      originalRepo,
       ...(workspaceState ? { workspace: workspaceState } : {}),
     });
     rollbackStack.add('Tool state', () => { removeWorktree(name); });

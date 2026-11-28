@@ -1,8 +1,10 @@
+import path from "path";
 import { CommandModule } from "yargs";
 import { logger } from "../logger";
-import { readState } from "../state";
+import { readState, writeState } from "../state";
 import { getProviderByName } from "../plugins";
 import { Worktree } from "../types";
+import { resolveOriginalRepo } from "../git";
 
 export const command = 'list';
 export const describe = 'List all managed git worktrees';
@@ -12,6 +14,7 @@ interface ListCommandArgs {
   long?: boolean;
 }
 
+export type WorktreePartition = Map<string, Worktree[]>;
 
 export const builder: CommandModule<{}, ListCommandArgs>['builder'] = (yargs) => {
   return yargs
@@ -39,9 +42,10 @@ export const handler: CommandModule<{}, ListCommandArgs>['handler'] = async (arg
       return;
     } else {
       logger.success(`Managed worktrees (${worktrees.length})`);
+      const partition = await groupByWorktree(worktrees);
 
-      if (verbose) printWorktreesVerbose(worktrees)
-      else printWorktreesConcise(worktrees) 
+      if (verbose) printWorktreesVerbose(partition);
+      else printWorktreesConcise(partition);
     }
 
   } catch (error) {
@@ -50,36 +54,89 @@ export const handler: CommandModule<{}, ListCommandArgs>['handler'] = async (arg
   }
 };
 
+// `persist` used here so we can leverage dependency injection for testing
+export async function groupByWorktree(
+  wts: Worktree[],
+  persist: (worktrees: Worktree[]) => void = writeState
+): Promise<WorktreePartition> {
+  const nameToWt: WorktreePartition = new Map();
+  let updated = false;
 
-function printWorktreesConcise(wts: Worktree[]): void {
-  const cwd = process.cwd();
+  for (const wt of wts) {
+    let originalRepoPath = wt.originalRepo;
 
-  const formatWorktree = (wt: Worktree): String => {
-    if(wt.path == cwd) return `  * ${wt.name}`; 
-    return `    ${wt.name}`; 
-  }
+    if (!originalRepoPath) {
+      originalRepoPath = await resolveOriginalRepo(wt.path);
 
-  logger.log(wts.map(wt => formatWorktree(wt)).join('\n'))
-}
-
-function printWorktreesVerbose(worktrees: Worktree[]): void {
-  const formattedWorktrees = worktrees.map(wt => {
-    let workspace_details = 'N/A';
-    if (wt.workspace) {
-      const provider = getProviderByName(wt.workspace.provider);
-      if (provider.getDisplayDetails) {
-        workspace_details = provider.getDisplayDetails(wt.workspace.metadata);
-      } else {
-        workspace_details = JSON.stringify(wt.workspace.metadata);
+      if (originalRepoPath) {
+        wt.originalRepo = originalRepoPath;
+        updated = true;
       }
     }
 
-    return {
-      name: wt.name,
-      path: wt.path,
-      workspace: workspace_details,
-    };
-  });
+    const key = originalRepoPath ?? '';
+    const wtGroup = nameToWt.get(key) ?? [];
+    wtGroup.push(wt);
+    nameToWt.set(key, wtGroup);
+  }
 
-console.table(formattedWorktrees)
+  if (updated) {
+    persist(wts);
+  }
+
+  return nameToWt;
+}
+
+export function formatWorktreesConcise(partition: WorktreePartition, cwd = process.cwd()): string {
+  const sections: string[] = [];
+
+  for (const [originalRepoPath, wts] of partition) {
+    const lines = wts.map((wt) =>
+      wt.path === cwd ? `  * ${wt.name}` : `    ${wt.name}`
+    );
+    const repoName = originalRepoPath ? path.basename(originalRepoPath) : 'Unknown repo';
+
+    const originalRepoLine = originalRepoPath === cwd ? `  * ${repoName}\n${lines.join('\n')}`
+                                                      : `    ${repoName}\n${lines.join('\n')}`;
+    sections.push(originalRepoLine);
+  }
+
+  return sections.join('\n\n');
+}
+
+function printWorktreesConcise(partition: WorktreePartition): void {
+  logger.log(formatWorktreesConcise(partition));
+}
+
+function printWorktreesVerbose(partition: WorktreePartition): void {
+  const formattedWorktrees: Array<{ name: string; path: string; workspace: string }> = [];
+
+  for (const [originalRepoPath, worktrees] of partition) {
+    const repoName = originalRepoPath ? path.basename(originalRepoPath) : 'Unknown repo';
+    formattedWorktrees.push({
+      name: repoName,
+      path: originalRepoPath || 'N/A',
+      workspace: 'N/A',
+    });
+
+    for (const wt of worktrees) {
+      let workspace_details = 'N/A';
+      if (wt.workspace) {
+        const provider = getProviderByName(wt.workspace.provider);
+        if (provider.getDisplayDetails) {
+          workspace_details = provider.getDisplayDetails(wt.workspace.metadata);
+        } else {
+          workspace_details = JSON.stringify(wt.workspace.metadata);
+        }
+      }
+
+      formattedWorktrees.push({
+        name: wt.name,
+        path: wt.path,
+        workspace: workspace_details,
+      });
+    }
+  }
+
+  console.table(formattedWorktrees);
 }
