@@ -6,5 +6,6 @@ export interface WorkspaceState {
 export interface Worktree {
   name: string;
   path: string;
+  originalRepo?: string;
   workspace?: WorkspaceState;
 }
